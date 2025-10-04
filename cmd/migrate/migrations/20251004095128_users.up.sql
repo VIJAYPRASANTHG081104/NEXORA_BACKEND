@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    profile_picture VARCHAR(300),
+    bio TEXT,
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    is_verified BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
+    theme VARCHAR(50) NOT NULL DEFAULT 'DARK'
+);
