@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"nexora_backend/cmd/api"
+	"nexora_backend/api/server"
 	"nexora_backend/config"
-	"nexora_backend/db"
+	"nexora_backend/pkg/db"
 )
 
 func main(){
@@ -24,7 +24,8 @@ func main(){
 	if err := initDB(db);err != nil{
 		log.Fatal("connition err",err)
 	}
-	apiServer := api.NewAPIServer(":8080")
+	apiServer := server.NewAPIServer(":8080",db)
+	
 	if err := apiServer.Run(); err != nil{
 		log.Fatal("error while running the API Server")
 	}

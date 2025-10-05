@@ -3,8 +3,7 @@ package users
 import (
 	"fmt"
 	"net/http"
-	"nexora_backend/types"
-	"nexora_backend/utils"
+	"nexora_backend/pkg/utils"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -12,10 +11,10 @@ import (
 
 
 type Handler struct{
-	store types.UserStore
+	store UserStoreInterface
 }
 
-func NewHandler(store types.UserStore) *Handler{
+func NewHandler(store UserStoreInterface) *Handler{
 	return &Handler{
 		store: store,
 	}
@@ -23,7 +22,7 @@ func NewHandler(store types.UserStore) *Handler{
 
 func (h* Handler) RegisterRoutes(router *mux.Router){
 	router.HandleFunc("/login",h.handleLogin);
-	router.HandleFunc("/register",h.handleRegister);
+	router.HandleFunc("/register",h.handleRegister).Methods("POST");
 }
 
 func (h*Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +30,8 @@ func (h*Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func(h *Handler) handleRegister(w http.ResponseWriter, r*http.Request){
-	var payload types.RegisterPayload;
+	fmt.Println("register");
+	var payload RegisterPayloadStruct;
 	
 	if err := utils.ParseJSON(r,&payload); err != nil{
 		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("Invalid json payload"))
@@ -43,6 +43,23 @@ func(h *Handler) handleRegister(w http.ResponseWriter, r*http.Request){
 		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("playload Validation Error: %v",errors))
 		return;
 	}
-}
 
+	user,err := h.store.GetUserByEmail(payload.Email)
+
+	if err != nil{
+		utils.WriteError(w,http.StatusInternalServerError,err);
+	}
+
+	if user != nil {
+		utils.WriteJSON(w,http.StatusBadRequest,fmt.Errorf("user already exist"));
+	}
+
+	
+
+}
 // Learn concreate type and type assertion in go
+// interface type
+// Name variable  differace private public
+// interface rules
+// migrations
+// 
