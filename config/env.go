@@ -12,6 +12,7 @@ type config struct{
 	DBuser string
 	DBpassword string
 	DBName string
+	JWTSecret string
  }
 
  var ENVS = initConfig()
@@ -25,6 +26,7 @@ type config struct{
 		DBpassword: getENV("DB_PASSWORD","2004"),
 		DBuser: getENV("DB_USER","jet"),
 		DBName: getENV("DB_NAME","nexora_DB"),
+		JWTSecret:getENV("JWT_SECRET","secret-key"),
 	}
  }
 
