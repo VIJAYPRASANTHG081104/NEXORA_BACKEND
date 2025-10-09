@@ -57,6 +57,7 @@ func (h*Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	jwt,err := utils.CreateToken(user.Username,user.Id,user.Email);
 
 	if err != nil {
+		fmt.Println(err)
 		utils.WriteError(w,http.StatusInternalServerError,fmt.Errorf("failed to generate token"));
 		return;
 	}
