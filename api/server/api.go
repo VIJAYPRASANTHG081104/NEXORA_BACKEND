@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"nexora_backend/api/router"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/rs/cors"
 )
 
@@ -24,9 +24,8 @@ func NewAPIServer(addr string,db *sql.DB) *APIServer{
 
 func (s *APIServer) Run() error{
 	// Create a router
-	muxRouter := mux.NewRouter()
-	
-	router.InitializeRouter(s.db,muxRouter)
+	initialRouter := gin.Default();
+	router.InitializeRouter(s.db,initialRouter)
 	// cors
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string {"http://localhost:3000"},
@@ -35,7 +34,7 @@ func (s *APIServer) Run() error{
 		AllowCredentials: true,
 	})
 
-	corsHandle := c.Handler(muxRouter);
+	corsHandle := c.Handler(initialRouter);
 
 	log.Println("Listening on port", s.addr);
 	return http.ListenAndServe(s.addr, corsHandle);

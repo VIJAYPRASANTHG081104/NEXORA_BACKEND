@@ -7,6 +7,7 @@ import (
 	"nexora_backend/api/server"
 	"nexora_backend/config"
 	"nexora_backend/pkg/db"
+	"nexora_backend/pkg/utils"
 )
 
 func main(){
@@ -20,7 +21,7 @@ func main(){
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	utils.InitiGCS();
 	if err := initDB(db);err != nil{
 		log.Fatal("connition err",err)
 	}

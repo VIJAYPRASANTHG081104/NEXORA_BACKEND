@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"nexora_backend/pkg/utils"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 )
 
 
@@ -14,93 +14,98 @@ type Handler struct{
 	store UserStoreInterface
 }
 
-func NewHandler(store UserStoreInterface) *Handler{
+func CreateUserHandler(store UserStoreInterface) *Handler{
 	return &Handler{
 		store: store,
 	}
 }
 
-func (h* Handler) RegisterRoutes(router *mux.Router){
-	router.HandleFunc("/login",h.handleLogin);
-	router.HandleFunc("/register",h.handleRegister).Methods("POST");
+func (h* Handler) RegisterRoutes(router *gin.Engine){
+	router.POST("/login", h.handleLogin)
+	router.POST("/register", h.handleRegister)
 }
 
-func (h*Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var payload LoginPayloadStruct;
-	if err := utils.ParseJSON(r,&payload); err != nil{
-		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("invalid json payload"))
-		return;
+func (h *Handler) handleLogin(c *gin.Context) {
+	var payload LoginPayloadStruct
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+		return
 	}
 
-	if err:= utils.Validate.Struct(payload);err != nil {
+	if err := utils.Validate.Struct(payload); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("playload Validation Error: %v",errors))
-		return;
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Payload validation error: %v", errors)})
+		return
 	}
 
-	user, err := h.store.GetUserByEmail(payload.Email);
+	user, err := h.store.GetUserByEmail(payload.Email)
 	if err != nil {
-		utils.WriteError(w,http.StatusInternalServerError,err);
-		return;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	if user == nil {
-		utils.WriteError(w,http.StatusUnauthorized,fmt.Errorf("invalid email or password"));
-		return;
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+	
+	if err := utils.ComparePassword(user.Password, payload.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
 	}
 
-	if err := utils.Comparepassword(user.Password,payload.Password); err != nil{
-		utils.WriteError(w,http.StatusUnauthorized,fmt.Errorf("invalid email or password"));
-		return;
-	}
-
-	jwt,err := utils.CreateToken(user.Username,user.Id,user.Email);
-
+	token, err := utils.CreateToken(user.Username, user.Id, user.Email)
 	if err != nil {
-		fmt.Println(err)
-		utils.WriteError(w,http.StatusInternalServerError,fmt.Errorf("failed to generate token"));
-		return;
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
 	}
-	utils.WriteJSON(w,http.StatusOK,map[string]string{"message":"login successful","token":jwt,});
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   token,
+	})
 }
 
-func(h *Handler) handleRegister(w http.ResponseWriter, r*http.Request){
+
+func(h *Handler) handleRegister(c *gin.Context){
 	var payload RegisterPayloadStruct;
-	fmt.Println(r.Body)
 	
-	if err := utils.ParseJSON(r,&payload); err != nil{
-		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("invalid json payload"))
+	if err := c.ShouldBindJSON(&payload); err != nil{
+		c.JSON(http.StatusBadRequest,fmt.Errorf("invalid json payload"))
 		return;
 	}
 
 	if err:= utils.Validate.Struct(payload);err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(w,http.StatusBadRequest,fmt.Errorf("playload Validation Error: %v",errors))
+		c.JSON(http.StatusBadRequest,fmt.Errorf("playload Validation Error: %v",errors))
 		return;
 	}
 	user,err := h.store.GetUserByEmail(payload.Email)
 
 	if err != nil{
-		utils.WriteError(w,http.StatusInternalServerError,err);
+		c.JSON(http.StatusInternalServerError,err);
 	}
 
 	if user != nil {
-		utils.WriteJSON(w,http.StatusBadRequest,fmt.Errorf("user already exist"));
+		c.JSON(http.StatusBadRequest,fmt.Errorf("user already exist"));
 	}
 
 	payload.Password, err = utils.Encrypt(payload.Password)
 	
 	if err != nil {
-		utils.WriteError(w,http.StatusInternalServerError,fmt.Errorf("failed to encrypt password"))
+		c.JSON(http.StatusInternalServerError,fmt.Errorf("failed to encrypt password"))
 	}
 
 	err = h.store.CreateUser(&payload);
 
 	if err != nil {
-		utils.WriteError(w,http.StatusInternalServerError,err)
+		c.JSON(http.StatusInternalServerError,err)
 		return
 	}
-	utils.WriteJSON(w,http.StatusCreated,map[string]string{"message":"user created successfully"})
+	c.JSON(http.StatusCreated,gin.H{
+		"message":"user created successfully",
+	})
 }
 
 // Learn concreate type and type assertion in go
