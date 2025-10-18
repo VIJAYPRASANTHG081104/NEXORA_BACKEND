@@ -1,4 +1,4 @@
-package videos
+package steam
 
 type gernerateSignedURLPayload struct{
 	Id int`json:"id" validate:"required"`
@@ -7,3 +7,4 @@ type gernerateSignedURLPayload struct{
 type videoServiceInterface interface{
 
 }
+

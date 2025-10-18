@@ -1,4 +1,4 @@
-package videos
+package steam
 
 import (
 	"fmt"
@@ -25,6 +25,7 @@ func (h *VideoServiceHandler) VideoServiceRouter(rg *gin.RouterGroup) {
 	rg.GET("/generateSignedURL", generateSignedURL)
 	rg.PUT("/generateSignedURL", generateSignedURL)
 }
+
 
 
 func generateSignedURL(c *gin.Context)  {
