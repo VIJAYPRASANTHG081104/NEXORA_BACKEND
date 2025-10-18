@@ -3,8 +3,8 @@ package router
 import (
 	"database/sql"
 	"nexora_backend/api/middleware"
+	"nexora_backend/internal/stream"
 	"nexora_backend/internal/users"
-	"nexora_backend/internal/videos"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +17,7 @@ func InitializeRouter(db *sql.DB, router *gin.Engine) {
 	// video service
 	// videoService := &VideoService{}
 	api := router.Group("/api")
-	videoHandler := videos.CreateVideoServiceHandler(userStore)
+	videoHandler := stream.CreateVideoServiceHandler(userStore)
 	api.Use(middleware.AuthMiddleware()) // Example middleware
 	videoHandler.VideoServiceRouter(api)
 }
