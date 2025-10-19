@@ -1,4 +1,4 @@
-package steam
+package stream
 
 type gernerateSignedURLPayload struct{
 	Id int`json:"id" validate:"required"`
